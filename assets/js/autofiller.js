@@ -74,13 +74,38 @@
         defaultOption.text = "Select a Fighter...";
         select.add(defaultOption);
 
-        FIGHTER_DATA.forEach((fighter) => {
-            const opt = document.createElement('option');
-            opt.value = fighter.name;
-            opt.text = fighter.name;
-            select.add(opt);
+        // 1. Sort the data: First by Warband, then by Name
+        FIGHTER_DATA.sort((a, b) => {
+            const warbandA = (a.warband || "").toLowerCase(); // Handle missing warbands safely
+            const warbandB = (b.warband || "").toLowerCase();
+            const nameA = a.name.toLowerCase();
+            const nameB = b.name.toLowerCase();
+
+            // Compare Warbands first
+            if (warbandA < warbandB) return -1;
+            if (warbandA > warbandB) return 1;
+
+            // If Warbands are the same, compare Names
+            if (nameA < nameB) return -1;
+            if (nameA > nameB) return 1;
+            return 0;
         });
 
+        // 2. Populate Dropdown
+        FIGHTER_DATA.forEach((fighter) => {
+            const opt = document.createElement('option');
+            opt.value = fighter.name; // The value the script reads (keep as unique name)
+            
+            // The text the user sees (e.g. "Ironjawz: Megaboss")
+            if (fighter.warband) {
+                opt.text = `${fighter.warband}: ${fighter.name}`;
+            } else {
+                opt.text = fighter.name; // Fallback if no warband defined
+            }
+            
+            select.add(opt);
+        });
+        
         body.appendChild(select);
         panel.appendChild(body);
 
