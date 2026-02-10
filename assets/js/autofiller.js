@@ -74,8 +74,6 @@
         defaultOption.text = "Select a Fighter...";
         select.add(defaultOption);
 
-        FIGHTER_DATA.sort((a, b) => a.name.localeCompare(b.name));
-
         FIGHTER_DATA.forEach((fighter) => {
             const opt = document.createElement('option');
             opt.value = fighter.name;
