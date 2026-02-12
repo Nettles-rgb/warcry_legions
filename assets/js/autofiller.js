@@ -24,7 +24,8 @@
         w2_strength:  "strength1",
         w2_dmg_hit:   "damageBase1",
         w2_dmg_crit:  "damageCrit1",
-        weapon2_toggle: "weaponEnabled1"
+        weapon2_toggle: "weaponEnabled1",
+        grand_alliance: "alliance"
     };
 
     const RUNEMARK_MAP = {
@@ -127,6 +128,7 @@
                 setNativeValue(document.getElementById(FIELD_MAP.toughness), data.toughness);
                 setNativeValue(document.getElementById(FIELD_MAP.wounds), data.wounds);
                 setNativeValue(document.getElementById(FIELD_MAP.points), data.points);
+                setNativeValue(document.getElementById(FIELD_MAP.grand_alliance), data.grand_alliance);
 
                 if (data.weapons && data.weapons.length > 0) {
                     const w1 = data.weapons[0];
