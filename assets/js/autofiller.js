@@ -10,7 +10,7 @@
         name:       "fighterName",
         movement:   "movement",
         toughness:  "toughness",
-        wounds:     "wounds",
+        wounds:     "numWounds",
         points:     "pointCost",
         w1_min_range: "rangeMin0",
         w1_max_range: "rangeMax0",
