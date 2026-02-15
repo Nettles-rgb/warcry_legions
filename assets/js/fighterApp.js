@@ -95,18 +95,21 @@ var fighterCardsDiv = document.getElementById("fighterCardsDiv"); //document.cre
     const COEF_W1_AVG_DMG = 10.44;
     const COEF_W2_AVG_DMG = 11.13;
 
-    // Helper: Calculate Average Damage vs Toughness 4
+// Helper: Calculate Average Damage vs Toughness 4
     function getAvgDmgVsT4(w) {
         if (!w || !w.active) return 0;
 
         let hits = 1; // Default 5+ (1/6 chance)
-        // If Strength > 4 (Target), hit on 3+ (3/6 chance)
-        if (w.strength > 4) hits = 3;
-        // If Strength = 4 (Target), hit on 4+ (2/6 chance)
-        else if (w.strength == 4) hits = 2;
+		
+        if (Number(w.strength) > 4) hits = 3;
+        else if (Number(w.strength) == 4) hits = 2;
+
+        let att = Number(w.attacks);
+        let dmg = Number(w.damage);
+        let crit = Number(w.critical);
 
         // Formula: Attacks * ((Hits * Dmg) + (1 * Crit)) / 6
-        return (w.attacks * ((hits * w.damage) + w.critical)) / 6;
+        return (att * ((hits * dmg) + crit)) / 6;
     }
 
     // 1. Base Stats
