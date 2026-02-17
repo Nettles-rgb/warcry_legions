@@ -74,55 +74,67 @@ var fighterCardsDiv = document.getElementById("fighterCardsDiv"); //document.cre
   // their points system
   function getUnitScore(u){
 
-    //  Model Coefficients
-    const CONSTANT = -44.35;
-    const COEF_MOVE = 8.73;
-    const COEF_TOUGH = 7.79;
-    const COEF_WOUNDS = 1.76;
-    const COEF_WOUNDS_SQ = 0.038;
+    // Intercept
+    const CONSTANT = -43.40;
+    
+    // Base Stats
+    const COEF_MOVE = 8.63;
+    const COEF_TOUGH = 7.75;
+    const COEF_WOUNDS = 1.82;
+    const COEF_WOUNDS_SQ = 0.037;
 
-    const COEF_W1_MAX_RANGE = 3.41;
+    // Runemarks
+    const COEF_HERO = 15.69;
+    const COEF_MONSTER = 61.14;
+    const COEF_FLY = 12.38;
+    const COEF_ALLY = 6.95;
 
-    const COEF_HAS_WEAPON2 = -41.84;
-    const COEF_W2_MAX_RANGE = 2.74;
-    const COEF_W2_MIN_RANGE = 3.40;
+    // Weapons
+    const COEF_W1_MAX_RANGE = 3.42;
+    const COEF_HAS_WEAPON2 = -43.69;
+    const COEF_W2_MAX_RANGE = 3.46;
+    
+    const COEF_W1_AVG_DMG = 10.18;
+    const COEF_W2_AVG_DMG = 11.77;
 
-    const COEF_HERO = 15.15;
-    const COEF_MONSTER = 58.77;
-    const COEF_FLY = 12.10;
-    const COEF_ALLY = 6.58;
-
-    const COEF_W1_AVG_DMG = 10.44;
-    const COEF_W2_AVG_DMG = 11.13;
-
-// Helper: Calculate Average Damage vs Toughness 4
+    // --- Helper Function ---
+    // Calculate Average Damage vs Toughness 4
     function getAvgDmgVsT4(w) {
         if (!w || !w.active) return 0;
 
-        let hits = 1; // Default 5+ (1/6 chance)
-		
-        if (Number(w.strength) > 4) hits = 3;
-        else if (Number(w.strength) == 4) hits = 2;
-
+        // Force all inputs to numbers to avoid string concatenation errors
+        let str = Number(w.strength);
         let att = Number(w.attacks);
         let dmg = Number(w.damage);
         let crit = Number(w.critical);
+
+        let hits = 1; // Default 5+ (1/6 chance)
+        
+        if (str > 4) {
+            hits = 3; // 3+ (3/6 chance)
+        } else if (str == 4) {
+            hits = 2; // 4+ (2/6 chance)
+        }
 
         // Formula: Attacks * ((Hits * Dmg) + (1 * Crit)) / 6
         return (att * ((hits * dmg) + crit)) / 6;
     }
 
+    // --- Score Calculation ---
+
     // 1. Base Stats
     let score = CONSTANT;
-    score += COEF_MOVE * u.movement;
-    score += COEF_TOUGH * u.toughness;
-    score += COEF_WOUNDS * u.wounds;
-    score += COEF_WOUNDS_SQ * (u.wounds * u.wounds);
+    score += COEF_MOVE * Number(u.movement);
+    score += COEF_TOUGH * Number(u.toughness);
+    score += COEF_WOUNDS * Number(u.wounds);
+    score += COEF_WOUNDS_SQ * (Number(u.wounds) * Number(u.wounds));
 
-    // 2. Runemrks
+    // 2. Runemarks
     let marks = u.runemarks || [];
-
-    let isHero = u.leader || marks.includes('hero') || marks.includes('leader');
+    
+    // Check for Hero status (Leader checkbox OR 'hero' runemark)
+    // Excludes 'champion' runemark as per model findings
+    let isHero = u.leader || marks.includes('hero');
 
     if (isHero) score += COEF_HERO;
     if (marks.includes('monster')) score += COEF_MONSTER;
@@ -130,29 +142,28 @@ var fighterCardsDiv = document.getElementById("fighterCardsDiv"); //document.cre
     if (marks.includes('ally')) score += COEF_ALLY;
 
     // 3. Weapons
-    let weapons = u.weapons.filter((w) => w.active);
+    if (u.weapons && u.weapons.length > 0) {
+        // Filter for active weapons if your app supports disabling them
+        let activeWeapons = u.weapons.filter(w => w.active);
+        
+        // Weapon 1
+        if (activeWeapons.length > 0) {
+            let w1 = activeWeapons[0];
+            let w1Max = Array.isArray(w1.range) ? w1.range[1] : w1.range;
+            
+            score += COEF_W1_MAX_RANGE * Number(w1Max);
+            score += COEF_W1_AVG_DMG * getAvgDmgVsT4(w1);
+        }
 
-    // Weapon 1
-    if (weapons.length > 0){
-      let w1 = weapons[0];
-      // Handle range whether [min, max] or just max
-      let w1Max = Array.isArray(w1.range) ? w1.range[1] : w1.range;
-
-      score += COEF_W1_MAX_RANGE * w1Max;
-      score += COEF_W1_AVG_DMG * getAvgDmgVsT4(w1);
-    }
-
-    // Weapon 2
-    if (weapons.length >= 2){
-      let w2 = weapons[1];
-      let w2Max = Array.isArray(w2.range) ? w2.range[1] : w2.range;
-      // If scalar, min range is 0. If array [min, max], use min.
-      let w2Min = Array.isArray(w2.range) ? w2.range[0] : 0;
-
-      score += COEF_HAS_WEAPON2;
-      score += COEF_W2_MAX_RANGE * w2Max;
-      score += COEF_W2_MIN_RANGE * w2Min;
-      score += COEF_W2_AVG_DMG * getAvgDmgVsT4(w2);
+        // Weapon 2
+        if (activeWeapons.length >= 2) {
+            let w2 = activeWeapons[1];
+            let w2Max = Array.isArray(w2.range) ? w2.range[1] : w2.range;
+            
+            score += COEF_HAS_WEAPON2;
+            score += COEF_W2_MAX_RANGE * Number(w2Max);
+            score += COEF_W2_AVG_DMG * getAvgDmgVsT4(w2);
+        }
     }
 
     return Number(score.toFixed(2));
