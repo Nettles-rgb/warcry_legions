@@ -4,7 +4,7 @@
     'use strict';
 
     // 1. URL to your JSON data
-    const JSON_URL = "https://github.com/Nettles-rgb/warcry_legions/blob/master/assets/fighters.json";
+    const JSON_URL = "https://krisling049.github.io/warcry_data/fighters.json";
 
     const FIELD_MAP = {
         name:       "fighterName",
