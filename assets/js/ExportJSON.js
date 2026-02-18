@@ -33,27 +33,24 @@
     // =================================================================
     console.log("Exporter: Initializing...");
     
-    // Wait a brief moment to ensure autofiller.js has finished building the UI
+    // Wait for the Autofiller to build its panel first
     setTimeout(initExporter, 1000);
 
     function initExporter() {
-        // 1. Create the Button
         const exportBtn = document.createElement('button');
         exportBtn.className = "btn btn-success btn-block";
         exportBtn.innerText = "Export Current to JSON";
         exportBtn.style.marginTop = "10px";
         exportBtn.style.width = "100%";
         
-        // 2. Find where to put it
-        // We look for the card-body created by autofiller.js
+        // Find the card body created by autofiller.js
         const existingPanelBody = document.querySelector('.card.border-primary .card-body');
 
         if (existingPanelBody) {
-            // Option A: Append to the existing Autofiller panel
             existingPanelBody.appendChild(exportBtn);
             console.log("Exporter: Attached to Autofiller panel.");
         } else {
-            // Option B: Create a standalone panel if Autofiller isn't there
+            // Fallback: Create standalone panel
             const panel = document.createElement('div');
             panel.className = "card border-success mb-3";
             panel.style.margin = "10px";
@@ -71,10 +68,8 @@
 
             const mainContainer = document.querySelector('.container') || document.body;
             mainContainer.prepend(panel);
-            console.log("Exporter: Created standalone panel.");
         }
 
-        // 3. Add Click Listener
         exportBtn.addEventListener('click', exportFighter);
     }
 
@@ -85,12 +80,12 @@
         try {
             const fighter = {};
 
-            // 1. Basic Fields
+            // 1. Basic Fields (Using getNumber to force Integer type)
             fighter.name = getValue(FIELD_MAP.name);
-            fighter.movement = parseInt(getValue(FIELD_MAP.movement)) || 0;
-            fighter.toughness = parseInt(getValue(FIELD_MAP.toughness)) || 0;
-            fighter.numWounds = parseInt(getValue(FIELD_MAP.wounds)) || 0;
-            fighter.pointCost = parseInt(getValue(FIELD_MAP.points)) || 0;
+            fighter.movement = getNumber(FIELD_MAP.movement);
+            fighter.toughness = getNumber(FIELD_MAP.toughness);
+            fighter.wounds = getNumber(FIELD_MAP.wounds); 
+            fighter.points = getNumber(FIELD_MAP.points);
             fighter.grand_alliance = getValue(FIELD_MAP.grand_alliance);
 
             // 2. Faction Runemark
@@ -112,19 +107,19 @@
 
             // 4. Weapons
             fighter.weapons = [];
+            const allWeaponIcons = Array.from(document.querySelectorAll('img[id^="wr:"]'));
             
             // Weapon 1
             const w1 = {
-                max_range: getValue(FIELD_MAP.w1_max_range),
-                min_range: getValue(FIELD_MAP.w1_min_range),
-                attacks: getValue(FIELD_MAP.w1_attacks),
-                strength: getValue(FIELD_MAP.w1_strength),
-                dmg_hit: getValue(FIELD_MAP.w1_dmg_hit),
-                dmg_crit: getValue(FIELD_MAP.w1_dmg_crit)
+                max_range: getNumber(FIELD_MAP.w1_max_range),
+                min_range: getNumber(FIELD_MAP.w1_min_range),
+                attacks: getNumber(FIELD_MAP.w1_attacks),
+                strength: getNumber(FIELD_MAP.w1_strength),
+                dmg_hit: getNumber(FIELD_MAP.w1_dmg_hit),
+                dmg_crit: getNumber(FIELD_MAP.w1_dmg_crit)
             };
             
-            const allWeaponIcons = Array.from(document.querySelectorAll('img[id^="wr:"]'));
-            const w1Icon = allWeaponIcons.find(img => img.classList.contains("active")); // First active icon
+            const w1Icon = allWeaponIcons.find(img => img.classList.contains("active")); 
             if (w1Icon) {
                 w1.runemark = w1Icon.id.replace("wr:", "");
             }
@@ -134,12 +129,12 @@
             const w2Btn = document.getElementById(FIELD_MAP.weapon2_toggle);
             if (w2Btn && w2Btn.classList.contains("active")) {
                 const w2 = {
-                    max_range: getValue(FIELD_MAP.w2_max_range),
-                    min_range: getValue(FIELD_MAP.w2_min_range),
-                    attacks: getValue(FIELD_MAP.w2_attacks),
-                    strength: getValue(FIELD_MAP.w2_strength),
-                    dmg_hit: getValue(FIELD_MAP.w2_dmg_hit),
-                    dmg_crit: getValue(FIELD_MAP.w2_dmg_crit)
+                    max_range: getNumber(FIELD_MAP.w2_max_range),
+                    min_range: getNumber(FIELD_MAP.w2_min_range),
+                    attacks: getNumber(FIELD_MAP.w2_attacks),
+                    strength: getNumber(FIELD_MAP.w2_strength),
+                    dmg_hit: getNumber(FIELD_MAP.w2_dmg_hit),
+                    dmg_crit: getNumber(FIELD_MAP.w2_dmg_crit)
                 };
                 
                 // Find second active icon
@@ -165,10 +160,20 @@
         }
     }
 
-    // Helper to safely get value by ID
+    // --- HELPERS ---
+
+    // Get value as String
     function getValue(id) {
         const el = document.getElementById(id);
         return el ? el.value : "";
+    }
+
+    // Get value as Number (Corrects the string issue)
+    function getNumber(id) {
+        const el = document.getElementById(id);
+        if (!el) return 0;
+        const val = parseInt(el.value, 10);
+        return isNaN(val) ? 0 : val;
     }
 
 })();
