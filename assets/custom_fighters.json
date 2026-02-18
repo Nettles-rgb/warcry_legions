@@ -1,6 +1,6 @@
 [
   {
-    "name": "Lord- Celestant on Dracoth",
+    "name": "Lord-Celestant on Dracoth",
     "movement": 8,
     "toughness": 6,
     "wounds": 35,
@@ -13,21 +13,21 @@
     ],
     "weapons": [
       {
-        "max_range": "1",
-        "min_range": "0",
-        "attacks": "5",
-        "strength": "4",
-        "dmg_hit": "2",
-        "dmg_crit": "5",
+        "max_range": 1,
+        "min_range": 0,
+        "attacks": 5,
+        "strength": 4,
+        "dmg_hit": 2,
+        "dmg_crit": 5,
         "runemark": "Hammer"
       },
       {
-        "max_range": "7",
-        "min_range": "0",
-        "attacks": "2",
-        "strength": "4",
-        "dmg_hit": "2",
-        "dmg_crit": "4",
+        "max_range": 7,
+        "min_range": 0,
+        "attacks": 2,
+        "strength": 4,
+        "dmg_hit": 2,
+        "dmg_crit": 4,
         "runemark": "Blast"
       }
     ]
@@ -46,21 +46,21 @@
     ],
     "weapons": [
       {
-        "max_range": "3",
-        "min_range": "0",
-        "attacks": "3",
-        "strength": "4",
-        "dmg_hit": "2",
-        "dmg_crit": "5",
+        "max_range": 3,
+        "min_range": 0,
+        "attacks": 3,
+        "strength": 4,
+        "dmg_hit": 2,
+        "dmg_crit": 5,
         "runemark": "Spear"
       },
       {
-        "max_range": "7",
-        "min_range": "0",
-        "attacks": "2",
-        "strength": "4",
-        "dmg_hit": "2",
-        "dmg_crit": "4",
+        "max_range": 7,
+        "min_range": 0,
+        "attacks": 2,
+        "strength": 4,
+        "dmg_hit": 2,
+        "dmg_crit": 4,
         "runemark": "Blast"
       }
     ]
@@ -79,21 +79,21 @@
     ],
     "weapons": [
       {
-        "max_range": "15",
-        "min_range": "3",
-        "attacks": "4",
-        "strength": "4",
-        "dmg_hit": "1",
-        "dmg_crit": "4",
+        "max_range": 15,
+        "min_range": 3,
+        "attacks": 4,
+        "strength": 4,
+        "dmg_hit": 1,
+        "dmg_crit": 4,
         "runemark": "Ranged weapon"
       },
       {
-        "max_range": "7",
-        "min_range": "0",
-        "attacks": "2",
-        "strength": "4",
-        "dmg_hit": "2",
-        "dmg_crit": "4",
+        "max_range": 7,
+        "min_range": 0,
+        "attacks": 2,
+        "strength": 4,
+        "dmg_hit": 2,
+        "dmg_crit": 4,
         "runemark": "Blast"
       }
     ]
@@ -112,21 +112,21 @@
     ],
     "weapons": [
       {
-        "max_range": "1",
-        "min_range": "0",
-        "attacks": "4",
-        "strength": "4",
-        "dmg_hit": "2",
-        "dmg_crit": "4",
+        "max_range": 1,
+        "min_range": 0,
+        "attacks": 4,
+        "strength": 4,
+        "dmg_hit": 2,
+        "dmg_crit": 4,
         "runemark": "Axe"
       },
       {
-        "max_range": "7",
-        "min_range": "0",
-        "attacks": "2",
-        "strength": "4",
-        "dmg_hit": "2",
-        "dmg_crit": "4",
+        "max_range": 7,
+        "min_range": 0,
+        "attacks": 2,
+        "strength": 4,
+        "dmg_hit": 2,
+        "dmg_crit": 4,
         "runemark": "Blast"
       }
     ]
@@ -145,21 +145,21 @@
     ],
     "weapons": [
       {
-        "max_range": "1",
-        "min_range": "0",
-        "attacks": "3",
-        "strength": "5",
-        "dmg_hit": "3",
-        "dmg_crit": "5",
+        "max_range": 1,
+        "min_range": 0,
+        "attacks": 3,
+        "strength": 5,
+        "dmg_hit": 3,
+        "dmg_crit": 5,
         "runemark": "Hammer"
       },
       {
-        "max_range": "7",
-        "min_range": "0",
-        "attacks": "2",
-        "strength": "4",
-        "dmg_hit": "2",
-        "dmg_crit": "4",
+        "max_range": 7,
+        "min_range": 0,
+        "attacks": 2,
+        "strength": 4,
+        "dmg_hit": 2,
+        "dmg_crit": 4,
         "runemark": "Blast"
       }
     ]
