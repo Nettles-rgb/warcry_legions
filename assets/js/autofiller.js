@@ -3,25 +3,27 @@
 (function() {
     'use strict';
 
-    // 1. CONFIGURATION: Your 3 Data Sources
+    // =================================================================
+    // 1. CONFIGURATION & DATA SOURCES
+    // =================================================================
     const JSON_SOURCES = [
         { 
             url: "https://krisling049.github.io/warcry_data/fighters.json", 
             type: "Main",     
             order: 0,
-            prefix: "" // No prefix for main fighters
+            prefix: "" 
         },
         { 
             url: "./assets/custom_fighters.json", 
             type: "Custom",   
             order: 1,
-            prefix: "[Custom] " // Added to Warband Name
+            prefix: "[Custom] " 
         },
         { 
             url: "./assets/retired_fighters.json", 
             type: "Retired",  
             order: 2,
-            prefix: "[Retired] " // Added to Warband Name
+            prefix: "[Retired] " 
         }
     ];
 
@@ -47,15 +49,34 @@
         grand_alliance: "alliance"
     };
 
+    // =================================================================
+    // 2. DICTIONARIES (THE TRANSLATORS)
+    // =================================================================
+    
+    // Character Runemarks (JSON Name -> HTML ID Name)
     const RUNEMARK_MAP = {
-        "hero": "Leader",
-        "minion": "Minion",
-        "champion": "Champion"
+        "hero": "Leader"
     };
 
+    // Weapon Runemarks (JSON Name -> HTML ID Suffix "wr:Suffx")
+    const WEAPON_RUNEMARK_MAP = {
+        "ranged": "Ranged weapon",
+        "Ranged": "Ranged weapon",
+        "reach": "Reach weapon",
+        "Reach": "Reach weapon"
+    };
+
+    // Faction Runemarks (JSON Warband Name -> HTML ID Suffix "fr:Suffix")
+    const FACTION_RUNEMARK_MAP = {
+        "order": "Grand Alliance: Order"
+    };
+
+
+    // =================================================================
+    // 3. FETCH AND PROCESS
+    // =================================================================
     console.log("Auto-Filler: Fetching all fighter data...");
 
-    // 2. FETCH ALL FILES SIMULTANEOUSLY
     Promise.all(JSON_SOURCES.map(source => 
         fetch(source.url)
             .then(response => {
@@ -63,11 +84,8 @@
                 return response.json();
             })
             .then(data => {
-                // MODIFY DATA HERE
                 data.forEach(f => {
-                    f._sortOrder = source.order; // Keep for safety sorting
-                    
-                    // Prepend the prefix to the Warband Name immediately
+                    f._sortOrder = source.order; 
                     if (f.warband && source.prefix) {
                         f.warband = source.prefix + f.warband;
                     }
@@ -85,8 +103,11 @@
         initTool(combinedFighters);
     });
 
+    // =================================================================
+    // 4. MAIN TOOL LOGIC
+    // =================================================================
     function initTool(FIGHTER_DATA) {
-        // --- UI SETUP ---
+        // --- UI Setup ---
         const panel = document.createElement('div');
         panel.className = "card border-primary mb-3";
         panel.style.margin = "10px";
@@ -107,44 +128,33 @@
         defaultOption.text = "Select a Fighter...";
         select.add(defaultOption);
 
-        // 3. UPDATED SORTING LOGIC
+        // Sort Logic
         FIGHTER_DATA.sort((a, b) => {
-            // A. Sort by Source first (Main < Custom < Retired)
             const orderA = a._sortOrder || 0;
             const orderB = b._sortOrder || 0;
-            if (orderA !== orderB) {
-                return orderA - orderB;
-            }
+            if (orderA !== orderB) return orderA - orderB;
 
-            // B. Then sort by Warband (Alphabetical)
-            // Since we added [Custom] to the string, they will group naturally
             const warbandA = (a.warband || "").toLowerCase();
             const warbandB = (b.warband || "").toLowerCase();
             if (warbandA < warbandB) return -1;
             if (warbandA > warbandB) return 1;
 
-            // C. Finally sort by Name
             const nameA = a.name.toLowerCase();
             const nameB = b.name.toLowerCase();
             if (nameA < nameB) return -1;
             if (nameA > nameB) return 1;
-            
             return 0;
         });
 
-        // 4. Populate Dropdown
+        // Populate Dropdown
         FIGHTER_DATA.forEach((fighter) => {
             const opt = document.createElement('option');
             opt.value = fighter.name;
-            
-            // Because we modified 'fighter.warband' in the fetch stage,
-            // it already contains "[Custom] Warband Name"
             if (fighter.warband) {
                 opt.text = `${fighter.warband}: ${fighter.name}`;
             } else {
                 opt.text = fighter.name;
             }
-
             select.add(opt);
         });
 
@@ -154,11 +164,9 @@
         const mainContainer = document.querySelector('.container') || document.body;
         mainContainer.prepend(panel);
 
-        // --- EVENT LISTENER (Standard Logic) ---
+        // --- Selection Event ---
         select.addEventListener('change', function() {
             const selectedName = this.value;
-            // Note: If duplicate names exist across Main/Custom, find() picks the first one.
-            // Since we sort Main to the top, it prioritizes Main.
             const data = FIGHTER_DATA.find(f => f.name === selectedName);
 
             if (data) {
@@ -170,36 +178,11 @@
                 setNativeValue(document.getElementById(FIELD_MAP.points), data.points);
                 setNativeValue(document.getElementById(FIELD_MAP.grand_alliance), data.grand_alliance);
 
-                // B. Weapon 1
-                if (data.weapons && data.weapons.length > 0) {
-                    const w1 = data.weapons[0];
-                    setNativeValue(document.getElementById(FIELD_MAP.w1_max_range), w1.max_range);
-                    setNativeValue(document.getElementById(FIELD_MAP.w1_min_range), w1.min_range);
-                    setNativeValue(document.getElementById(FIELD_MAP.w1_attacks), w1.attacks);
-                    setNativeValue(document.getElementById(FIELD_MAP.w1_strength), w1.strength);
-                    setNativeValue(document.getElementById(FIELD_MAP.w1_dmg_hit), w1.dmg_hit);
-                    setNativeValue(document.getElementById(FIELD_MAP.w1_dmg_crit), w1.dmg_crit);
-                }
+                // B. Weapon Stats
+                fillWeaponStats(data.weapons, 0);
+                fillWeaponStats(data.weapons, 1);
 
-                // C. Weapon 2
-                if (data.weapons && data.weapons.length > 1) {
-                    const w2 = data.weapons[1];
-                    setNativeValue(document.getElementById(FIELD_MAP.w2_max_range), w2.max_range);
-                    setNativeValue(document.getElementById(FIELD_MAP.w2_min_range), w2.min_range);
-                    setNativeValue(document.getElementById(FIELD_MAP.w2_attacks), w2.attacks);
-                    setNativeValue(document.getElementById(FIELD_MAP.w2_strength), w2.strength);
-                    setNativeValue(document.getElementById(FIELD_MAP.w2_dmg_hit), w2.dmg_hit);
-                    setNativeValue(document.getElementById(FIELD_MAP.w2_dmg_crit), w2.dmg_crit);
-                } else {
-                    setNativeValue(document.getElementById(FIELD_MAP.w2_max_range), "");
-                    setNativeValue(document.getElementById(FIELD_MAP.w2_min_range), "");
-                    setNativeValue(document.getElementById(FIELD_MAP.w2_attacks), "");
-                    setNativeValue(document.getElementById(FIELD_MAP.w2_strength), "");
-                    setNativeValue(document.getElementById(FIELD_MAP.w2_dmg_hit), "");
-                    setNativeValue(document.getElementById(FIELD_MAP.w2_dmg_crit), "");
-                }
-
-                // D. Weapon Toggle
+                // C. Weapon Toggle
                 const w2Btn = document.getElementById(FIELD_MAP.weapon2_toggle);
                 const shouldBeActive = (data.weapons && data.weapons.length > 1);
                 if (w2Btn) {
@@ -208,14 +191,22 @@
                     else if (!shouldBeActive && isCurrentlyActive) w2Btn.click();
                 }
 
-                // E. Weapon Runemarks
+                // D. Weapon Runemarks (WITH DICTIONARY SUPPORT)
                 if (data.weapons && Array.isArray(data.weapons)) {
                     data.weapons.forEach((weapon, index) => {
                         if (index > 1) return;
                         if (weapon.runemark) {
-                            const runemarkName = capitalizeFirstLetter(weapon.runemark);
+                            // 1. Check Dictionary First
+                            let runemarkName = WEAPON_RUNEMARK_MAP[weapon.runemark.toLowerCase()];
+                            
+                            // 2. If not in dictionary, Capitalize First Letter
+                            if (!runemarkName) {
+                                runemarkName = capitalizeFirstLetter(weapon.runemark);
+                            }
+
                             const iconID = "wr:" + runemarkName;
                             const icons = document.querySelectorAll(`[id="${iconID}"]`);
+                            
                             if (icons.length > index) {
                                 const targetIcon = icons[index];
                                 if (!targetIcon.classList.contains("active")) targetIcon.click();
@@ -226,18 +217,22 @@
                     });
                 }
 
-                // F. Faction Runemark
-                // NOTE: We stripped the prefix before matching!
+                // E. Faction Runemark (WITH DICTIONARY SUPPORT)
                 const rawWarband = data.warband || "";
-                // Remove [Custom] or [Retired] to find the real image ID
-                const cleanWarband = rawWarband.replace(/\[Custom\] |\[Retired\] /g, "");
-                
+                let cleanWarband = rawWarband.replace(/\[Custom\] |\[Retired\] /g, "");
+
+                // 1. Check Dictionary First
+                if (FACTION_RUNEMARK_MAP[cleanWarband]) {
+                    cleanWarband = FACTION_RUNEMARK_MAP[cleanWarband];
+                }
+
                 if (cleanWarband) {
                     const allRunemarks = document.querySelectorAll('img[id^="fr:"]');
                     let matchFound = false;
                     allRunemarks.forEach(img => {
                         const idName = img.id.replace("fr:", "").toLowerCase();
                         const targetName = cleanWarband.toLowerCase();
+                        // Fuzzy matching logic
                         if (targetName.includes(idName) || idName.includes(targetName)) {
                             if (!img.classList.contains("active")) img.click();
                             matchFound = true;
@@ -247,7 +242,7 @@
                     });
                 }
 
-                // G. Character Runemarks
+                // F. Character Runemarks (WITH DICTIONARY SUPPORT)
                 let rawRunemarks = data.runemarks || [];
                 if (typeof rawRunemarks === 'string') {
                     rawRunemarks = rawRunemarks.split(',').map(s => s.trim());
@@ -269,6 +264,29 @@
                 });
             }
         });
+    }
+
+    // Helper: Fill Weapon Stats to reduce code duplication
+    function fillWeaponStats(weapons, index) {
+        if (weapons && weapons.length > index) {
+            const w = weapons[index];
+            const idx = index === 0 ? "w1" : "w2"; // Match FIELD_MAP keys
+            setNativeValue(document.getElementById(FIELD_MAP[`${idx}_max_range`]), w.max_range);
+            setNativeValue(document.getElementById(FIELD_MAP[`${idx}_min_range`]), w.min_range);
+            setNativeValue(document.getElementById(FIELD_MAP[`${idx}_attacks`]), w.attacks);
+            setNativeValue(document.getElementById(FIELD_MAP[`${idx}_strength`]), w.strength);
+            setNativeValue(document.getElementById(FIELD_MAP[`${idx}_dmg_hit`]), w.dmg_hit);
+            setNativeValue(document.getElementById(FIELD_MAP[`${idx}_dmg_crit`]), w.dmg_crit);
+        } else {
+             // Clear fields if weapon doesn't exist
+            const idx = index === 0 ? "w1" : "w2";
+            setNativeValue(document.getElementById(FIELD_MAP[`${idx}_max_range`]), "");
+            setNativeValue(document.getElementById(FIELD_MAP[`${idx}_min_range`]), "");
+            setNativeValue(document.getElementById(FIELD_MAP[`${idx}_attacks`]), "");
+            setNativeValue(document.getElementById(FIELD_MAP[`${idx}_strength`]), "");
+            setNativeValue(document.getElementById(FIELD_MAP[`${idx}_dmg_hit`]), "");
+            setNativeValue(document.getElementById(FIELD_MAP[`${idx}_dmg_crit`]), "");
+        }
     }
 
     function setNativeValue(element, value) {
