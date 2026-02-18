@@ -31,7 +31,7 @@
         "runemark": "Blast"
       }
     ]
-  }
+  },
   {
     "name": "Fulminator",
     "movement": 8,
@@ -64,7 +64,7 @@
         "runemark": "Blast"
       }
     ]
-  }
+  },
   {
     "name": "Tempestor",
     "movement": 8,
@@ -97,7 +97,7 @@
         "runemark": "Blast"
       }
     ]
-  }
+  },
   {
     "name": "Desolator",
     "movement": 8,
@@ -130,7 +130,7 @@
         "runemark": "Blast"
       }
     ]
-  }
+  },
   {
     "name": "Concussor",
     "movement": 8,
