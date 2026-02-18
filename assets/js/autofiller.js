@@ -3,8 +3,27 @@
 (function() {
     'use strict';
 
-    // 1. URL to your JSON data
-    const JSON_URL = "https://krisling049.github.io/warcry_data/fighters.json";
+    // 1. CONFIGURATION: Your 3 Data Sources
+    const JSON_SOURCES = [
+        { 
+            url: "https://krisling049.github.io/warcry_data/fighters.json", 
+            type: "Main",     
+            order: 0,
+            prefix: "" // No prefix for main fighters
+        },
+        { 
+            url: "./assets/custom_fighters.json", 
+            type: "Custom",   
+            order: 1,
+            prefix: "[Custom] " // Added to Warband Name
+        },
+        { 
+            url: "./assets/retired_fighters.json", 
+            type: "Retired",  
+            order: 2,
+            prefix: "[Retired] " // Added to Warband Name
+        }
+    ];
 
     const FIELD_MAP = {
         name:       "fighterName",
@@ -34,38 +53,52 @@
         "champion": "Champion"
     };
 
-    console.log("Auto-Filler: Fetching fighter data...");
+    console.log("Auto-Filler: Fetching all fighter data...");
 
-    fetch(JSON_URL)
-        .then(response => {
-            if (!response.ok) throw new Error("Network response was not ok");
-            return response.json();
-        })
-        .then(data => {
-            console.log("Auto-Filler: Data loaded!", data.length, "fighters.");
-            initTool(data);
-        })
-        .catch(error => {
-            console.error("Auto-Filler Error:", error);
-        });
+    // 2. FETCH ALL FILES SIMULTANEOUSLY
+    Promise.all(JSON_SOURCES.map(source => 
+        fetch(source.url)
+            .then(response => {
+                if (!response.ok) throw new Error(`Failed to load ${source.url}`);
+                return response.json();
+            })
+            .then(data => {
+                // MODIFY DATA HERE
+                data.forEach(f => {
+                    f._sortOrder = source.order; // Keep for safety sorting
+                    
+                    // Prepend the prefix to the Warband Name immediately
+                    if (f.warband && source.prefix) {
+                        f.warband = source.prefix + f.warband;
+                    }
+                });
+                return data;
+            })
+            .catch(err => {
+                console.warn("Skipping file:", source.url, err);
+                return []; 
+            })
+    ))
+    .then(results => {
+        const combinedFighters = results.flat();
+        console.log(`Auto-Filler: Loaded ${combinedFighters.length} total fighters.`);
+        initTool(combinedFighters);
+    });
 
     function initTool(FIGHTER_DATA) {
-        // Create the UI Container
+        // --- UI SETUP ---
         const panel = document.createElement('div');
         panel.className = "card border-primary mb-3";
         panel.style.margin = "10px";
         
-        // Header
         const header = document.createElement('div');
         header.className = "card-header";
         header.innerText = "Load Fighter (Auto-Fill)";
         panel.appendChild(header);
 
-        // Body
         const body = document.createElement('div');
         body.className = "card-body";
         
-        // Dropdown
         const select = document.createElement('select');
         select.className = "form-control";
         select.style.marginBottom = "10px";
@@ -74,41 +107,58 @@
         defaultOption.text = "Select a Fighter...";
         select.add(defaultOption);
 
-        // 1. Sort the data
+        // 3. UPDATED SORTING LOGIC
         FIGHTER_DATA.sort((a, b) => {
+            // A. Sort by Source first (Main < Custom < Retired)
+            const orderA = a._sortOrder || 0;
+            const orderB = b._sortOrder || 0;
+            if (orderA !== orderB) {
+                return orderA - orderB;
+            }
+
+            // B. Then sort by Warband (Alphabetical)
+            // Since we added [Custom] to the string, they will group naturally
             const warbandA = (a.warband || "").toLowerCase();
             const warbandB = (b.warband || "").toLowerCase();
-            const nameA = a.name.toLowerCase();
-            const nameB = b.name.toLowerCase();
-
             if (warbandA < warbandB) return -1;
             if (warbandA > warbandB) return 1;
+
+            // C. Finally sort by Name
+            const nameA = a.name.toLowerCase();
+            const nameB = b.name.toLowerCase();
             if (nameA < nameB) return -1;
             if (nameA > nameB) return 1;
+            
             return 0;
         });
 
-        // 2. Populate Dropdown
+        // 4. Populate Dropdown
         FIGHTER_DATA.forEach((fighter) => {
             const opt = document.createElement('option');
             opt.value = fighter.name;
+            
+            // Because we modified 'fighter.warband' in the fetch stage,
+            // it already contains "[Custom] Warband Name"
             if (fighter.warband) {
                 opt.text = `${fighter.warband}: ${fighter.name}`;
             } else {
                 opt.text = fighter.name;
             }
+
             select.add(opt);
         });
-        
+
         body.appendChild(select);
         panel.appendChild(body);
 
         const mainContainer = document.querySelector('.container') || document.body;
         mainContainer.prepend(panel);
 
-        // --- EVENT LISTENER ---
+        // --- EVENT LISTENER (Standard Logic) ---
         select.addEventListener('change', function() {
             const selectedName = this.value;
+            // Note: If duplicate names exist across Main/Custom, find() picks the first one.
+            // Since we sort Main to the top, it prioritizes Main.
             const data = FIGHTER_DATA.find(f => f.name === selectedName);
 
             if (data) {
@@ -120,7 +170,7 @@
                 setNativeValue(document.getElementById(FIELD_MAP.points), data.points);
                 setNativeValue(document.getElementById(FIELD_MAP.grand_alliance), data.grand_alliance);
 
-                // B. Weapon 1 Stats
+                // B. Weapon 1
                 if (data.weapons && data.weapons.length > 0) {
                     const w1 = data.weapons[0];
                     setNativeValue(document.getElementById(FIELD_MAP.w1_max_range), w1.max_range);
@@ -131,7 +181,7 @@
                     setNativeValue(document.getElementById(FIELD_MAP.w1_dmg_crit), w1.dmg_crit);
                 }
 
-                // C. Weapon 2 Stats
+                // C. Weapon 2
                 if (data.weapons && data.weapons.length > 1) {
                     const w2 = data.weapons[1];
                     setNativeValue(document.getElementById(FIELD_MAP.w2_max_range), w2.max_range);
@@ -149,7 +199,7 @@
                     setNativeValue(document.getElementById(FIELD_MAP.w2_dmg_crit), "");
                 }
 
-                // D. Weapon 2 Toggle
+                // D. Weapon Toggle
                 const w2Btn = document.getElementById(FIELD_MAP.weapon2_toggle);
                 const shouldBeActive = (data.weapons && data.weapons.length > 1);
                 if (w2Btn) {
@@ -158,46 +208,36 @@
                     else if (!shouldBeActive && isCurrentlyActive) w2Btn.click();
                 }
 
-                // ============================================================
-                // NEW: WEAPON RUNEMARKS LOGIC
-                // ============================================================
+                // E. Weapon Runemarks
                 if (data.weapons && Array.isArray(data.weapons)) {
                     data.weapons.forEach((weapon, index) => {
-                        // Only handle first 2 weapons
                         if (index > 1) return;
-
                         if (weapon.runemark) {
-                            // Construct ID: "wr:Claws" (ensure capital first letter)
                             const runemarkName = capitalizeFirstLetter(weapon.runemark);
                             const iconID = "wr:" + runemarkName;
-
-                            // Find all matching icons on page
                             const icons = document.querySelectorAll(`[id="${iconID}"]`);
-
-                            // If index is 0 (Weapon 1), click 1st icon.
-                            // If index is 1 (Weapon 2), click 2nd icon.
                             if (icons.length > index) {
                                 const targetIcon = icons[index];
-                                if (!targetIcon.classList.contains("active")) {
-                                    targetIcon.click();
-                                }
+                                if (!targetIcon.classList.contains("active")) targetIcon.click();
                             } else if (icons.length === 1 && index === 0) {
-                                // Fallback: If only 1 exists and we are Weapon 1
                                 if (!icons[0].classList.contains("active")) icons[0].click();
                             }
                         }
                     });
                 }
-                // ============================================================
 
-                // E. Faction Runemark
-                const targetWarband = data.warband;
-                if (targetWarband) {
+                // F. Faction Runemark
+                // NOTE: We stripped the prefix before matching!
+                const rawWarband = data.warband || "";
+                // Remove [Custom] or [Retired] to find the real image ID
+                const cleanWarband = rawWarband.replace(/\[Custom\] |\[Retired\] /g, "");
+                
+                if (cleanWarband) {
                     const allRunemarks = document.querySelectorAll('img[id^="fr:"]');
                     let matchFound = false;
                     allRunemarks.forEach(img => {
                         const idName = img.id.replace("fr:", "").toLowerCase();
-                        const targetName = targetWarband.toLowerCase();
+                        const targetName = cleanWarband.toLowerCase();
                         if (targetName.includes(idName) || idName.includes(targetName)) {
                             if (!img.classList.contains("active")) img.click();
                             matchFound = true;
@@ -207,7 +247,7 @@
                     });
                 }
 
-                // F. Character Runemarks
+                // G. Character Runemarks
                 let rawRunemarks = data.runemarks || [];
                 if (typeof rawRunemarks === 'string') {
                     rawRunemarks = rawRunemarks.split(',').map(s => s.trim());
@@ -243,7 +283,6 @@
         element.dispatchEvent(changeEvent);
     }
 
-    // Helper: "claws" -> "Claws"
     function capitalizeFirstLetter(string) {
         return string.charAt(0).toUpperCase() + string.slice(1);
     }
