@@ -134,12 +134,12 @@ var fighterCardsDiv = document.getElementById("fighterCardsDiv"); //document.cre
     
     // Check for Hero status (Leader checkbox OR 'hero' runemark)
     // Excludes 'champion' runemark as per model findings
-    let isHero = u.leader || marks.includes('hero');
+    let isHero = u.leader || marks.toLowerCase().includes('hero');
 
     if (isHero) score += COEF_HERO;
-    if (marks.includes('monster')) score += COEF_MONSTER;
-    if (marks.includes('fly')) score += COEF_FLY;
-    if (marks.includes('ally')) score += COEF_ALLY;
+    if (marks.toLowerCase().includes('monster')) score += COEF_MONSTER;
+    if (marks.toLowerCase().includes('fly')) score += COEF_FLY;
+    if (marks.toLowerCase().includes('ally')) score += COEF_ALLY;
 
     // 3. Weapons
     if (u.weapons && u.weapons.length > 0) {
